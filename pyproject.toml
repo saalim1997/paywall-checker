@@ -1,0 +1,30 @@
+[project]
+name = "paywall_checker"
+version = "0.1.0"
+description = "Paywalled Article Checker MVP"
+authors = [{name = "Saalim Mohamed Abdulla"}]
+dependencies = [
+    "cloudscraper>=1.2.71",
+    "fastapi>=0.115.12",
+    "pre-commit>=4.2.0",
+    "requests>=2.32.3",
+    "ruff>=0.11.12",
+    "uvicorn[standard]>=0.34.2",
+]
+
+[tool.uv]
+dependencies = [
+    "requests",
+    "fastapi",
+    "uvicorn[standard]",
+    "ruff"
+]
+
+[tool.ruff]
+line-length = 80
+target-version = "py311"
+exclude = ["venv", ".venv", "migrations"]
+select = ["E", "F", "I", "UP"] # errors, pyflakes, isort, pyupgrade
+
+[tool.ruff.lint]
+select = ["E", "F"]

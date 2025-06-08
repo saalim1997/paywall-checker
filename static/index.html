@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Shelf</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafbfc;
+    }
+    .container {
+      max-width: 500px;
+      margin: 2em auto;
+      padding: 2em 1em;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    form {
+      display: flex;
+      gap: 0.5em;
+      margin-bottom: 1.5em;
+    }
+    input[type="url"] {
+      flex: 1;
+      padding: 0.75em;
+      border-radius: 6px;
+      border: 1px solid #cfd8dc;
+      font-size: 1em;
+    }
+    button {
+      background: #2962ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0039cb;
+    }
+    .links-list {
+      list-style: none;
+      padding: 0;
+    }
+    .link-item {
+      background: #f1f8e9;
+      margin-bottom: 1em;
+      border-radius: 8px;
+      padding: 1em;
+      box-shadow: 0 1px 3px rgba(44,62,80,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+    }
+    .link-url {
+      word-break: break-all;
+      font-size: 0.95em;
+      color: #333;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5em;
+    }
+    .paywall-btn {
+      background: #fbc02d;
+      color: #222;
+    }
+    .paywall-btn:hover {
+      background: #ffeb3b;
+      color: #111;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 1em 0.5em; }
+      .link-item { padding: 0.75em; }
+      form { flex-direction: column; }
+      button, input[type="url"] { width: 100%; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Paywall Reader</h1>
+    <form id="urlForm" autocomplete="off">
+      <input type="url" id="urlInput" placeholder="Paste article link here" required>
+      <button type="submit">Save</button>
+    </form>
+    <ul class="links-list" id="linksList"></ul>
+  </div>
+  <script>
+    const apiBase = ""; // Change if your API is not at root
+
+    async function fetchLinks() {
+      const resp = await fetch(`${apiBase}/links/`);
+      const data = await resp.json();
+      renderLinks(data.links || []);
+    }
+
+    function renderLinks(links) {
+      const list = document.getElementById('linksList');
+      list.innerHTML = "";
+      if (!links.length) {
+        list.innerHTML = "<li style='text-align:center;color:#888;'>No links yet. Paste one above!</li>";
+        return;
+      }
+      for (const link of links.slice().reverse()) {
+        const li = document.createElement("li");
+        li.className = "link-item";
+        li.innerHTML = `
+          <div class="link-url">${link.url}</div>
+          <div class="actions">
+            <a href="${link.url}" target="_blank">
+              <button>Open Original</button>
+            </a>
+            <a href="${link.accessible_url}" target="_blank">
+              <button class="paywall-btn">
+                ${link.paywall_status === "paywalled" ? "Open Paywall-Free" : "Open (No Paywall)"}
+              </button>
+            </a>
+          </div>
+        `;
+        list.appendChild(li);
+      }
+    }
+
+    document.getElementById("urlForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) return;
+      const formBtn = e.target.querySelector("button");
+      formBtn.disabled = true;
+      formBtn.textContent = "Saving...";
+      try {
+        await fetch(`${apiBase}/links/`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({url})
+        });
+        document.getElementById("urlInput").value = "";
+        await fetchLinks();
+      } catch {
+        alert("Failed to save link.");
+      }
+      formBtn.disabled = false;
+      formBtn.textContent = "Save";
+    };
+
+    // On page load
+    fetchLinks();
+  </script>
+</body>
+</html>
