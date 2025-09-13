@@ -20,6 +20,8 @@ oauth.register(
 @router.get("/login")
 async def login(request: Request):
     redirect_uri = request.url_for("auth")
+    # Force HTTPS for Google OAuth
+    redirect_uri = redirect_uri.replace("http://", "https://")
     print("Redirect URI:", redirect_uri)
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
