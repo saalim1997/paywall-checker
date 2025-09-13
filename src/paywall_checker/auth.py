@@ -28,11 +28,17 @@ async def login(request: Request):
 
 @router.get("/auth/callback", name="auth")
 async def auth(request: Request):
-    token = await oauth.google.authorize_access_token(request)
-    user = await oauth.google.parse_id_token(request, token)
-    # Store user info in session
-    request.session["user"] = dict(user)
-    return RedirectResponse("/")
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        print("Token:", token)
+        user = await oauth.google.parse_id_token(request, token)
+        print("User:", user)
+        # Store user info in session
+        request.session["user"] = dict(user)
+        return RedirectResponse("/")
+    except Exception as e:
+        print("OAuth callback error:", e)
+        raise HTTPException(status_code=500, detail="OAuth callback failed")
 
 
 @router.get("/logout")
