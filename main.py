@@ -22,3 +22,6 @@ def startup_event():
 app.include_router(auth_router)
 app.include_router(router)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+for route in app.routes:
+    print(route.name, route.path)
