@@ -21,4 +21,4 @@ COPY ./static ./static
 EXPOSE 8000
 
 # Run the app with Uvicorn
-CMD ["uvicorn", "src.paywall_checker.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

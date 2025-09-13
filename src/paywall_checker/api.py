@@ -1,37 +1,32 @@
-from fastapi import APIRouter, FastAPI
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from .auth import get_current_user
 from .db import add_link, get_links, init_db
 from .paywall import is_accessible
 from .utils import get_proreader_url
 
-app = FastAPI()
+router = APIRouter()
 
 
-@app.on_event("startup")
+@router.on_event("startup")
 def startup_event():
     init_db()
-
-
-# @app.get("/")
-# def read_root():
-#     return {"message": "Paywall Checker Service Running"}
 
 
 class LinkRequest(BaseModel):
     url: str
 
 
-@app.post("/links/")
-def save_link(link: LinkRequest):
-    add_link(link.url)
+@router.post("/links/")
+def save_link(link: LinkRequest, user=Depends(get_current_user)):
+    add_link(link.url, user["email"])
     return {"message": "Link saved", "url": link.url}
 
 
-@app.post("/check/")
-def check_links():
-    links = get_links(status="paywalled")
+@router.post("/check/")
+def check_links(user=Depends(get_current_user)):
+    links = get_links(user["email"], status="paywalled")
     results = []
     for link in links:
         link_id = link["id"]
@@ -41,13 +36,13 @@ def check_links():
     return results
 
 
-# ------ Router Section ------
-router = APIRouter()
+# # ------ Router Section ------
+# router = APIRouter()
 
 
 @router.get("/links/")
-def list_links():
-    links = get_links()
+def list_links(user=Depends(get_current_user)):
+    links = get_links(user["email"])
     results = []
     for link in links:
         url = link["url"]
@@ -66,9 +61,3 @@ def list_links():
             }
         )
     return {"links": results}
-
-
-# Register the router!
-app.include_router(router)
-
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
