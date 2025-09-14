@@ -37,7 +37,8 @@ async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
         print("Token:", token)
-        user = await oauth.google.parse_id_token(request, token)
+        print("Token keys:", token.keys())
+        user = await oauth.google.parse_id_token(request, token["id_token"])
         print("User:", user)
         # Store user info in session
         request.session["user"] = dict(user)
