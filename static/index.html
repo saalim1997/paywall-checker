@@ -79,6 +79,42 @@
       background: #ffeb3b;
       color: #111;
     }
+    .login-container {
+      text-align: center;
+      padding: 2em;
+    }
+    .logged-in-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2em;
+      padding: 0.5em;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    .logout-btn {
+      background: #e0e0e0;
+      color: #333;
+      padding: 0.5em 1em;
+    }
+    .logged-out-view {
+      text-align: center;
+      padding: 2em;
+    }
+    .logged-out-view p {
+      color: #666;
+      margin-bottom: 2em;
+    }
     @media (max-width: 600px) {
       .container { padding: 1em 0.5em; }
       .link-item { padding: 0.75em; }
@@ -90,8 +126,9 @@
 </head>
 <body>
   <div class="container">
-    <h1>Paywall Reader</h1>
-    <div style="text-align:center; margin-bottom:1em;">
+    <div id="loggedOutView" class="logged-out-view" style="display: none;">
+      <h1>Paywall Reader</h1>
+      <p>Save and access your favorite articles without paywalls.</p>
       <a href="/login">
         <button style="background:#fff;color:#222;border:1px solid #cfd8dc;padding:0.5em 1.5em;border-radius:6px;cursor:pointer;font-size:1em;">
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="height:1em;vertical-align:middle;margin-right:0.5em;">
@@ -99,14 +136,49 @@
         </button>
       </a>
     </div>
-    <form id="urlForm" autocomplete="off">
-      <input type="url" id="urlInput" placeholder="Paste article link here" required>
-      <button type="submit">Save</button>
-    </form>
-    <ul class="links-list" id="linksList"></ul>
+
+    <div id="loggedInView" style="display: none;">
+      <div class="logged-in-header">
+        <div class="user-info">
+          <img id="userAvatar" class="user-avatar" src="" alt="Profile">
+          <span id="userName"></span>
+        </div>
+        <a href="/logout">
+          <button class="logout-btn">Logout</button>
+        </a>
+      </div>
+
+      <h1>My Articles</h1>
+      <form id="urlForm" autocomplete="off">
+        <input type="url" id="urlInput" placeholder="Paste article link here" required>
+        <button type="submit">Save</button>
+      </form>
+      <ul class="links-list" id="linksList"></ul>
+    </div>
   </div>
+
   <script>
-    const apiBase = ""; // Change if your API is not at root
+    const apiBase = "";
+
+    async function checkLoginStatus() {
+      try {
+        const resp = await fetch(`${apiBase}/me`);
+        if (resp.ok) {
+          const user = await resp.json();
+          document.getElementById('loggedInView').style.display = 'block';
+          document.getElementById('loggedOutView').style.display = 'none';
+          document.getElementById('userName').textContent = user.name;
+          document.getElementById('userAvatar').src = user.picture;
+          fetchLinks();
+        } else {
+          document.getElementById('loggedInView').style.display = 'none';
+          document.getElementById('loggedOutView').style.display = 'block';
+        }
+      } catch (error) {
+        document.getElementById('loggedInView').style.display = 'none';
+        document.getElementById('loggedOutView').style.display = 'block';
+      }
+    }
 
     async function fetchLinks() {
       const resp = await fetch(`${apiBase}/links/`);
@@ -163,8 +235,8 @@
       formBtn.textContent = "Save";
     };
 
-    // On page load
-    fetchLinks();
+    // Check login status on page load
+    checkLoginStatus();
   </script>
 </body>
 </html>
