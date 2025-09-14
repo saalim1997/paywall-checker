@@ -36,11 +36,20 @@ async def auth(request: Request):
         token = await oauth.google.authorize_access_token(request)
         print("Token:", token)
         print("Token keys:", token.keys())
-        user = await oauth.google.parse_id_token(request, token)
+        
+        # The userinfo is already in the token dictionary
+        user = token.get('userinfo')
+        
+        # If userinfo is not present, try to parse from id_token
+        if not user and 'id_token' in token:
+            user = await oauth.google.parse_id_token(token)
+        
         print("User:", user)
+        
         if not user:
-            print("parse_id_token returned None or empty.")
-            raise Exception("parse_id_token returned None or empty.")
+            print("No user info found in token")
+            raise Exception("No user info found in token")
+            
         # Store user info in session
         request.session["user"] = dict(user)
         return RedirectResponse("/")
