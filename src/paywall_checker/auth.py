@@ -24,10 +24,8 @@ async def login(request: Request):
     print("Redirect URI:", redirect_uri)
     # Print the full authorize URL
     authorize_url = await oauth.google.authorize_redirect(
-        request, 
-        redirect_uri, 
-        return_url=True
-        )
+        request, redirect_uri, return_url=True
+    )
     print("Authorize URL sent to Google:", authorize_url)
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -40,12 +38,17 @@ async def auth(request: Request):
         print("Token keys:", token.keys())
         user = await oauth.google.parse_id_token(request, token)
         print("User:", user)
+        if not user:
+            print("parse_id_token returned None or empty.")
+            raise Exception("parse_id_token returned None or empty.")
         # Store user info in session
         request.session["user"] = dict(user)
         return RedirectResponse("/")
     except Exception as e:
-        print("OAuth callback error:", e)
-        raise HTTPException(status_code=500, detail="OAuth callback failed")
+        print("OAuth callback error:", repr(e))
+        raise HTTPException(
+            status_code=500, detail=f"OAuth callback failed: {e}"
+        )
 
 
 @router.get("/logout")
